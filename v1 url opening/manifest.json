@@ -1,0 +1,23 @@
+{
+  "manifest_version": 3,
+  "name": "Bayut URL Opener",
+  "version": "1.0",
+  "description": "Extract and open Bayut property detail URLs in new tabs",
+  "permissions": [
+    "tabs",
+    "scripting",
+    "activeTab"
+  ],
+  "action": {
+    "default_popup": "popup.html"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"]
+    }
+  ]
+}
