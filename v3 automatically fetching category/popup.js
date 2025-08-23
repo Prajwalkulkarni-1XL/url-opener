@@ -1,4 +1,4 @@
-// Run this code when the popup HTML is fully loaded
+// Handle popup button click
 document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("startScraping").addEventListener("click", () => {
     chrome.runtime.sendMessage({ type: "START_SCRAPING" });
