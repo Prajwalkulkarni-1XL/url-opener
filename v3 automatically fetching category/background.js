@@ -16,7 +16,22 @@ chrome.runtime.onMessage.addListener((message) => {
   }
   if (message.type === "OPEN_URLS") {
     console.log("🔗 Opening property URLs:", message.urls);
-    message.urls.forEach(url => chrome.tabs.create({ url }));
+    // message.urls.forEach(url => chrome.tabs.create({ url }));
+    message.urls.forEach((url) => {
+      chrome.tabs.create({ url, active: false }, (tab) => {
+        const tabId = tab.id;
+
+        // Inject window.name setter
+        chrome.scripting.executeScript({
+          target: { tabId },
+          func: (categoryName) => {
+            window.name = JSON.stringify({ category: categoryName });
+            console.log("📝 Set window.name =", window.name);
+          },
+          args: [currentCategory?.categoryName || null], // 👈 Pass current category name
+        });
+      });
+    });
   }
   if (message.type === "CATEGORY_DONE") {
     console.log("✅ Category done. Moving to next...");

@@ -53,7 +53,7 @@ function runAutomation() {
 
   setTimeout(() => {
     goToNextPage();
-  }, 5 * 60 * 1000); // 2 minutes delay before next page
+  }, 15 * 60 * 1000); // 2 minutes delay before next page
 }
 
 function goToNextPage() {

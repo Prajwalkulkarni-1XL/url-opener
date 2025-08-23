@@ -120,8 +120,19 @@ function openUrlsInBatches(urls) {
     if (index >= urls.length) return;
 
     const url = urls[index];
-    chrome.tabs.create({ url, active: false }, () => {
-      console.log(`Opened: ${url}`);
+
+    chrome.tabs.create({ url, active: false }, (tab) => {
+      const tabId = tab.id;
+
+      // Wait for tab to load partially, then inject window.name
+      chrome.scripting.executeScript({
+        target: { tabId },
+        func: (categoryName) => {
+          window.name = JSON.stringify({ category: categoryName });
+          console.log("📝 Set window.name =", window.name);
+        },
+        args: [currentCategory.categoryName]
+      });
     });
 
     index++;
