@@ -38,6 +38,15 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   }
 });
 
+chrome.runtime.onMessageExternal.addListener((message, sender, sendResponse) => {
+  if (message.type === "GET_DEVICE_ID") {
+    chrome.storage.local.get("deviceId", (result) => {
+      sendResponse({ deviceId: result.deviceId });
+    });
+    return true; // keep message channel open
+  }
+});
+
 // Fetch and lock one category to start scraping
 async function startCategoryScraping() {
   chrome.storage.local.get("deviceId", async ({ deviceId }) => {
@@ -121,19 +130,7 @@ function openUrlsInBatches(urls) {
 
     const url = urls[index];
 
-    chrome.tabs.create({ url, active: false }, (tab) => {
-      const tabId = tab.id;
-
-      // Wait for tab to load partially, then inject window.name
-      chrome.scripting.executeScript({
-        target: { tabId },
-        func: (categoryName) => {
-          window.name = JSON.stringify({ category: categoryName });
-          console.log("📝 Set window.name =", window.name);
-        },
-        args: [currentCategory.categoryName]
-      });
-    });
+    chrome.tabs.create({ url, active: false }, (tab) => {});
 
     index++;
     // Wait before opening next tab

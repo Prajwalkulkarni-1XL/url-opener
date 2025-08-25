@@ -1,9 +1,11 @@
 // Constants
-const MAX_RETRIES = 10;              // Max attempts to wait for listings
-const RETRY_DELAY_MS = 1000;         // Wait 1s before retrying to find listings
-const SPA_CHECK_INTERVAL_MS = 1000;  // Check every 1s for URL change (SPA)
-const BATCH_DELAY_MS = 1 * 60 * 1000; // Delay between sending first and second batch (1 min)
-const NEXT_PAGE_DELAY_MS = 5 * 60 * 1000; // Delay before clicking "Next" (5 mins)
+const MAX_RETRIES = 10;
+const RETRY_DELAY_MS = 1000;
+const SPA_CHECK_INTERVAL_MS = 1000;
+
+// TODO: change according to need 
+const BATCH_DELAY_MS = 3 * 60 * 1000;
+const NEXT_PAGE_DELAY_MS = 15 * 60 * 1000;
 
 let isRunning = false;
 let lastUrl = location.href;
