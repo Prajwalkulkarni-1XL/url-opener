@@ -31,11 +31,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     // Open listing URLs in tabs
     openUrlsInBatches(message.urls);
   }
-
-  if (message.type === "CATEGORY_DONE") {
-    // Finish current and move to next
-    unlockAndMoveToNextCategory();
-  }
 });
 
 chrome.runtime.onMessageExternal.addListener((message, sender, sendResponse) => {
@@ -63,6 +58,9 @@ async function startCategoryScraping() {
       if (json.success && json.data) {
         currentCategory = json.data;
         console.log("Locked category:", currentCategory.categoryName);
+        chrome.storage.local.set({ currentCategory }, () => {
+          console.log("🔒 Category locked and stored:", currentCategory.categoryName);
+        });
         openCurrentCategory(currentCategory);
       } else {
         console.warn("No more categories.");
@@ -75,28 +73,41 @@ async function startCategoryScraping() {
 
 // Unlock current category and start next
 function unlockAndMoveToNextCategory() {
-  chrome.storage.local.get("deviceId", async ({ deviceId }) => {
-    if (!currentCategory?._id) return;
+  return new Promise((resolve, reject) => {
+    chrome.storage.local.get(["deviceId", "currentCategory"], ({ deviceId, currentCategory: storedCategory }) => {
+      if (!deviceId || !storedCategory?._id) {
+        reject("Missing device ID or current category.");
+        return;
+      }
 
-    try {
-      await fetch(CATEGORY_UNLOCK_ENDPOINT, {
+      fetch(CATEGORY_UNLOCK_ENDPOINT, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          categoryId: currentCategory._id,
+          categoryId: storedCategory._id,
           deviceId: deviceId,
         }),
-      });
-
-      console.log("Category unlocked:", currentCategory.categoryName);
-      currentCategory = null;
-      // Move on to next category
-      startCategoryScraping();
-    } catch (err) {
-      console.error("Failed to unlock:", err);
-    }
+      })
+        .then((response) => {
+          if (!response.ok) {
+            throw new Error(`Failed with status ${response.status}`);
+          }
+          return response.json();
+        })
+        .then((data) => {
+          console.log("✅ Category unlocked:", storedCategory.categoryName);
+          chrome.storage.local.remove("currentCategory");
+          currentCategory = null; 
+          resolve();
+        })
+        .catch((err) => {
+          console.error("Error unlocking category:", err);
+          reject(err);
+        });
+    });
   });
 }
+
 
 // Open the category URL in a new tab and inject the automation script
 function openCurrentCategory(category) {
@@ -140,3 +151,18 @@ function openUrlsInBatches(urls) {
   // Start opening URLs
   openNext();
 }
+
+chrome.runtime.onConnect.addListener((port) => {
+  console.log("🧲 Port connected:", port.name);
+
+  port.onMessage.addListener((message) => {
+    console.log("📨 Message on port:", message);
+
+    if (message.type === "CATEGORY_DONE") {
+      unlockAndMoveToNextCategory().then(() => {
+        port.postMessage({ status: "done" }); // respond
+        startCategoryScraping();
+      });
+    }
+  });
+});

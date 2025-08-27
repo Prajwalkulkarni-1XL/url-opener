@@ -102,10 +102,14 @@ function goToNextPage() {
     isRunning = false;
     nextBtn.click();
   } else {
-    console.log("No Next button. Sending CATEGORY_DONE.");
-    if (!nextBtn || !nextBtn.href) {
-      console.log("No Next button. Sending CATEGORY_DONE.");
-      chrome.runtime.sendMessage({ type: "CATEGORY_DONE" });
-    }
+    console.log("No Next button. Finishing up...");
+    console.log("Sending CATEGORY_DONE");
+
+    const port = chrome.runtime.connect({ name: "category" });
+    port.postMessage({ type: "CATEGORY_DONE", urls: "" });
+
+    port.onMessage.addListener((response) => {
+      console.log("✅ Response from background:", response);
+    });
   }
 }
